@@ -1,17 +1,31 @@
 package com.example.mynote.data.repository
 
+import android.app.Application
+import com.example.mynote.data.database.NoteDatabase
 import com.example.mynote.data.entity.Note
 
-class NoteRepositoryImpl: NoteRepository {
-    override fun addNote(title: String, text: String, backgroundColor: Int): Note {
-        TODO()
+class NoteRepositoryImpl(application: Application): NoteRepository {
+
+    private val noteDao = NoteDatabase.getInstance(application).noteDAO()
+
+    override fun addNote(title: String, text: String, backgroundColor: Int){
+        noteDao.insertNote(Note(Note.UNDEFINED, title,text,backgroundColor))
     }
 
     override fun removeNote(id: Int) {
-        TODO("Not yet implemented")
+        noteDao.deleteNote(id)
     }
 
-    override fun editNote(id:Int): Note {
-        TODO("Not yet implemented")
+    override fun editNote(id:Int){
+        val note = noteDao.getNote(id)
+        noteDao.updateNote(note)
+    }
+
+    override fun getNote(id: Int): Note {
+        return noteDao.getNote(id)
+    }
+
+    override fun getNoteList(): List<Note> {
+        return noteDao.getNoteList()
     }
 }

@@ -8,10 +8,12 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes")
     fun getNoteList(): List<Note>
-    @Insert
+    @Query("SELECT * FROM notes WHERE id =:noteId LIMIT 1 ")
+    fun getNote(noteId: Int):Note
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNote(note: Note)
     @Update
     fun updateNote(note: Note)
-    @Delete
-    fun deleteNote(note: Note)
+    @Query("DELETE FROM notes WHERE id =:noteId")
+    fun deleteNote(noteId: Int)
 }

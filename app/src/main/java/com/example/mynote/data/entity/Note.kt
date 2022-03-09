@@ -14,5 +14,8 @@ data class Note (
     var text:String,
     @ColumnInfo(name = "backgroundColor")
     var backgroundColor:Int
-
-)
+){
+    companion object{
+        const val UNDEFINED = 0
+    }
+}
