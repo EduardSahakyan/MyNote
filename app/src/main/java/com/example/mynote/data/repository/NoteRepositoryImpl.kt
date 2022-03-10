@@ -16,8 +16,7 @@ class NoteRepositoryImpl(application: Application): NoteRepository {
         noteDao.deleteNote(id)
     }
 
-    override fun editNote(id:Int){
-        val note = noteDao.getNote(id)
+    override fun editNote(note:Note){
         noteDao.updateNote(note)
     }
 

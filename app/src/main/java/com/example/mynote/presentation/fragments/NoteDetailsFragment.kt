@@ -1,8 +1,14 @@
 package com.example.mynote.presentation.fragments
 
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.EditText
+import android.widget.Toast
+import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.mynote.R
@@ -16,10 +22,14 @@ import java.lang.RuntimeException
 class NoteDetailsFragment : Fragment() {
 
     private var editable: Boolean = false
+    @ColorInt private var colorBackground: Int = -1
+    private var noteId: Int = -1;
     private var _binding:FragmentNoteDetailsBinding? = null
     private val binding:FragmentNoteDetailsBinding
     get() = _binding ?: throw RuntimeException("NoteDetailBinding is null")
     lateinit var viewModel: NoteDetailsViewModel
+    private lateinit var edit: MenuItem
+    private lateinit var save: MenuItem
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,16 +37,49 @@ class NoteDetailsFragment : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.action_menu, menu)
+        edit = menu.findItem(R.id.edit)
+        edit.isVisible = !editable
+        save = menu.findItem(R.id.save)
+        save.isVisible = editable
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
+            R.id.edit ->{
+                setEditable(binding.edTitile, true)
+                setEditable(binding.edText, true)
+                edit.isVisible = false
+                save.isVisible = true;
+
+            }
             R.id.save ->{
                 if(editable){
-                    viewModel.add(binding.edTitile.text.toString(),
-                    binding.edText.text.toString(),
-                    200)
+                    if(binding.edTitile.text.toString().isNotBlank() && binding.edText.text.toString().isNotBlank()){
+                        viewModel.add(binding.edTitile.text.toString(),
+                            binding.edText.text.toString(),
+                            colorBackground)
+                        requireActivity().supportFragmentManager.popBackStack()
+                        edit.isVisible = true
+                        save.isVisible = false;
+                    }
+                    else
+                        Toast.makeText(requireContext(), "Please enter title/text", Toast.LENGTH_LONG).show()
+                }
+                else{
+                    if(binding.edTitile.text.toString().isNotBlank() && binding.edText.text.toString().isNotBlank()){
+                        val note = Note(noteId,
+                            binding.edTitile.text.toString(),
+                            binding.edText.text.toString(),
+                            colorBackground)
+                        viewModel.edit(note)
+                        requireActivity().supportFragmentManager.popBackStack()
+                        edit.isVisible = true
+                        save.isVisible = false;
+                        Log.d("TESTT", "$noteId")
+                    }
+                    else
+                        Toast.makeText(requireContext(), "Please enter title/text", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -69,29 +112,62 @@ class NoteDetailsFragment : Fragment() {
         requireArguments().getBoolean(EDITABLE_EXTRA).let {
             editable = it
         }
-        /*setEditable(binding.edTitile, editable)
-        setEditable(binding.edText, editable)*/
+        requireArguments().getInt(ID_EXTRA).let {
+            noteId = it
+        }
+        requireArguments().getInt(COLOR_EXTRA).let {
+            colorBackground = if(editable)
+                ContextCompat.getColor(requireActivity(), R.color.purple_200)
+            else
+                it
+            binding.root.setBackgroundColor(colorBackground)
+        }
+        setEditable(binding.edTitile, editable)
+        setEditable(binding.edText, editable)
 
-
+        binding.apply {
+            color.setOnClickListener {
+                if(card.isVisible)
+                    card.visibility = View.GONE
+                else{
+                    edit.isVisible = false
+                    save.isVisible = true;
+                    card.visibility = View.VISIBLE
+                }
+            }
+            colorOne.setOnClickListener {
+                colorBackground = ContextCompat.getColor(requireContext(), R.color.purple_200)
+                binding.root.setBackgroundColor(colorBackground)
+            }
+            colorTwo.setOnClickListener {
+                colorBackground = ContextCompat.getColor(requireContext(), R.color.purple_500)
+                binding.root.setBackgroundColor(colorBackground)
+            }
+            colorThree.setOnClickListener {
+                colorBackground = ContextCompat.getColor(requireContext(), R.color.teal_200)
+                binding.root.setBackgroundColor(colorBackground)
+            }
+        }
     }
 
 
     private fun setEditable(editText: EditText, editable:Boolean){
-        editText.isFocusable = editable
-        editText.isFocusableInTouchMode = editable
-        editText.isClickable = editable
-        editText.isCursorVisible = editable
+        editText.isEnabled = editable
     }
 
     companion object{
 
         private const val TITLE_EXTRA = "title"
+        private const val COLOR_EXTRA = "color"
+        private const val ID_EXTRA = "id"
         private const val TEXT_EXTRA = "text"
         const val EDITABLE_EXTRA = "flag"
 
         fun newInstance(note:Note, editable:Boolean) : NoteDetailsFragment{
             return NoteDetailsFragment().apply {
                 arguments = Bundle().apply {
+                    putInt(COLOR_EXTRA, note.backgroundColor)
+                    putInt(ID_EXTRA, note.id)
                     putString(TITLE_EXTRA, note.title)
                     putString(TEXT_EXTRA, note.text)
                     putBoolean(EDITABLE_EXTRA, editable)

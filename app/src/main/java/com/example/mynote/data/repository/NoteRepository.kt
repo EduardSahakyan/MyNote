@@ -8,7 +8,7 @@ interface NoteRepository {
 
     fun removeNote(id:Int)
 
-    fun editNote(id:Int)
+    fun editNote(note:Note)
 
     fun getNote(id:Int):Note
 

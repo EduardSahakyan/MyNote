@@ -22,6 +22,7 @@ class NoteAdapter:RecyclerView.Adapter<NoteAdapter.NoteHolder>() {
         val note = noteList[position]
         holder.binding.apply {
             titleText.text = noteList[position].title
+            card.setCardBackgroundColor(note.backgroundColor)
         }
         holder.itemView.setOnClickListener {
             onClickListener?.invoke(note)
